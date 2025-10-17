@@ -75,10 +75,10 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12">
           <div className="mb-6 sm:mb-0">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
               Welcome back, {session.user?.name}
             </h1>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 text-base">
               Manage your photo albums and create new memories
             </p>
           </div>
@@ -90,6 +90,15 @@ export default function DashboardPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             <span>Create Album</span>
+          </Link>
+          <Link
+            href="/studio"
+            className="border-2 border-purple-600 text-purple-600 px-8 py-3 rounded-xl hover:bg-purple-50 transition-all duration-200 transform hover:scale-105 font-medium shadow-lg flex items-center space-x-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            <span>Go to Studio</span>
           </Link>
         </div>
 
@@ -156,7 +165,7 @@ export default function DashboardPage() {
 
         {/* Albums Grid */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center">
+          <h2 className="text-xl font-bold text-gray-900 mb-8 flex items-center">
             <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mr-3">
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -172,8 +181,8 @@ export default function DashboardPage() {
                   <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 4h6v2H8v-2z"/>
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">No albums yet</h3>
-              <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">No albums yet</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto text-base">
                 Create your first album to start organizing your photos and preserving your memories
               </p>
               <Link
@@ -236,7 +245,7 @@ export default function DashboardPage() {
 
                     {/* Album Info */}
                     <div className="p-6">
-                      <h3 className="font-bold text-gray-900 truncate group-hover:text-purple-600 text-lg mb-2 transition-colors">
+                      <h3 className="font-bold text-gray-900 truncate group-hover:text-purple-600 text-base mb-2 transition-colors">
                         {album.title}
                       </h3>
                       {album.description && (

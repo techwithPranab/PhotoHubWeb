@@ -40,6 +40,12 @@ export default function Header() {
                   Create Album
                 </Link>
                 <Link
+                  href="/studio"
+                  className="text-gray-700 hover:text-blue-600 transition-colors"
+                >
+                  Studio
+                </Link>
+                <Link
                   href="/settings"
                   className="text-gray-700 hover:text-blue-600 transition-colors"
                 >
@@ -165,6 +171,13 @@ export default function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Create Album
+                  </Link>
+                  <Link
+                    href="/studio"
+                    className="block px-3 py-2 text-gray-700 hover:text-blue-600"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Studio
                   </Link>
                   <Link
                     href="/settings"

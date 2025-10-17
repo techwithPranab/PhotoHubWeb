@@ -53,6 +53,9 @@ export default function Navigation() {
               <Link href="/home-decor" className="text-gray-700 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors duration-200">
                 Home Decor
               </Link>
+              <Link href="/studio" className="text-gray-700 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors duration-200">
+                Studio
+              </Link>
               <Link href="/cards" className="text-gray-700 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors duration-200">
                 Cards
               </Link>
@@ -142,6 +145,9 @@ export default function Navigation() {
             </Link>
             <Link href="/home-decor" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
               Home Decor
+            </Link>
+            <Link href="/studio" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
+              Studio
             </Link>
             <Link href="/cards" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
               Cards

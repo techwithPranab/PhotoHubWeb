@@ -21,8 +21,11 @@ export default function AlbumViewPage() {
   const albumId = params.id as string;
 
   useEffect(() => {
-    if (albumId) {
+    if (albumId && albumId !== 'undefined' && albumId.trim() !== '') {
       fetchAlbum();
+    } else {
+      setError('Invalid album ID');
+      setIsLoading(false);
     }
   }, [albumId]);
 
@@ -198,7 +201,7 @@ export default function AlbumViewPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-gray-900">{album.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{album.title}</h1>
               {album.privacy === 'public' && (
                 <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
                   Public
@@ -240,10 +243,10 @@ export default function AlbumViewPage() {
                 Add Photos
               </button>
               <Link
-                href={`/album/edit/${album.id}`}
+                href={`/editor/${album.id}`}
                 className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors"
               >
-                Edit Album
+                Edit in Studio
               </Link>
             </div>
           )}
@@ -254,7 +257,7 @@ export default function AlbumViewPage() {
       {showUpload && canUpload && (
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Upload Photos</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Upload Photos</h2>
             <button
               onClick={() => setShowUpload(false)}
               className="text-gray-400 hover:text-gray-600"
@@ -277,7 +280,7 @@ export default function AlbumViewPage() {
 
       {/* Photos Grid */}
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Photos</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-6">Photos</h2>
         
         {album.photos.length === 0 ? (
           <div className="text-center py-12">
@@ -286,7 +289,7 @@ export default function AlbumViewPage() {
                 <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No photos yet</h3>
+            <h3 className="text-base font-medium text-gray-900 mb-2">No photos yet</h3>
             <p className="text-gray-600 mb-4">
               {canUpload ? 'Start by uploading some photos to this album' : 'This album doesn\'t have any photos yet'}
             </p>
@@ -315,19 +318,17 @@ export default function AlbumViewPage() {
                 </button>
                   
                   {canEdit && (
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeletePhoto(photo.id);
-                        }}
-                        className="bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePhoto(photo.id);
+                      }}
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   )}
                 
                 {photo.caption && (

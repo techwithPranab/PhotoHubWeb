@@ -58,13 +58,31 @@ export async function GET(request: NextRequest) {
     const albums = await Album.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit)
-      .lean();
+      .limit(limit);
 
     const total = await Album.countDocuments(query);
 
+    // Transform albums to include id field
+    const transformedAlbums = albums.map(album => ({
+      id: album._id.toString(),
+      title: album.title,
+      description: album.description,
+      privacy: album.privacy,
+      coverPhoto: album.coverPhoto,
+      layout: album.layout,
+      theme: album.theme,
+      photoCount: album.photoCount,
+      totalSize: album.totalSize,
+      viewCount: album.viewCount,
+      likeCount: album.likeCount,
+      isPublished: album.isPublished,
+      publishedAt: album.publishedAt,
+      createdAt: album.createdAt,
+      updatedAt: album.updatedAt
+    }));
+
     return NextResponse.json({
-      albums,
+      albums: transformedAlbums,
       pagination: {
         current: page,
         pages: Math.ceil(total / limit),
@@ -115,7 +133,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       album: {
-        id: album._id,
+        id: album._id.toString(), // Ensure it's a string
         title: album.title,
         description: album.description,
         privacy: album.privacy,

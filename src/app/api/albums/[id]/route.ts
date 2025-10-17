@@ -33,6 +33,12 @@ export async function GET(
 ) {
   try {
     const { id: albumId } = await params;
+
+    // Validate albumId
+    if (!albumId || albumId === 'undefined' || albumId.trim() === '') {
+      return NextResponse.json({ error: 'Invalid album ID' }, { status: 400 });
+    }
+
     const url = new URL(request.url);
     const password = url.searchParams.get('password');
 
