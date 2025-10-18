@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import AdminHeader from '@/components/admin/AdminHeader';
+import AdminFooter from '@/components/admin/AdminFooter';
 
 interface DashboardStats {
   totalOrders: number;
@@ -24,6 +28,8 @@ const getChangeColor = (changeType: string) => {
 };
 
 export default function AdminDashboardPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats>({
     totalOrders: 0,
     pendingOrders: 0,
@@ -35,8 +41,13 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (status === 'loading') return;
+    if (!session || session.user.role !== 'admin') {
+      router.push('/auth/login');
+      return;
+    }
     fetchDashboardStats();
-  }, []);
+  }, [session, status, router]);
 
   const fetchDashboardStats = async () => {
     try {
@@ -125,7 +136,7 @@ export default function AdminDashboardPage() {
     {
       title: 'View Albums',
       description: 'Browse and review user albums',
-      href: '/albums',
+      href: '/admin/albums',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -154,8 +165,25 @@ export default function AdminDashboardPage() {
     }
   ];
 
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AdminHeader />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+        <AdminFooter />
+      </div>
+    );
+  }
+
+  if (!session || session.user.role !== 'admin') {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <AdminHeader />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
@@ -220,6 +248,7 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
+      <AdminFooter />
     </div>
   );
 }

@@ -82,7 +82,7 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
     // Update order with payment success
     order.paymentStatus = 'completed';
     order.stripePaymentIntentId = paymentIntent.id;
-    order.orderStatus = 'processing'; // Move to processing after payment
+    order.status = 'processing'; // Move to processing after payment
     order.updatedAt = new Date();
 
     await order.save();
@@ -140,7 +140,7 @@ async function handlePaymentCanceled(paymentIntent: Stripe.PaymentIntent) {
 
     // Update order with payment cancellation
     order.paymentStatus = 'failed';
-    order.orderStatus = 'cancelled';
+    order.status = 'cancelled';
     order.stripePaymentIntentId = paymentIntent.id;
     order.updatedAt = new Date();
 

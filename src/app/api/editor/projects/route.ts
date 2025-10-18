@@ -5,7 +5,7 @@ import connectDB from '@/lib/mongodb';
 import EditorProject from '@/models/EditorProject';
 import Album from '@/models/Album';
 import AlbumPage from '@/models/AlbumPage';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 // GET /api/editor/projects - Get user's editor projects
 export async function GET(request: NextRequest) {

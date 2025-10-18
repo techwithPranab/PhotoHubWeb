@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
-import Order, { IOrderItem } from '@/models/Order';
+import Order, { IOrder, IOrderItem } from '@/models/Order';
+
+interface PopulatedOrder extends Omit<IOrder, 'userId'> {
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     const query: Record<string, unknown> = {};
     if (status) {
-      query.orderStatus = status;
+      query.status = status;
     }
     if (search) {
       query.$or = [
@@ -41,26 +49,29 @@ export async function GET(request: NextRequest) {
     const total = await Order.countDocuments(query);
 
     return NextResponse.json({
-      orders: orders.map(order => ({
-        id: order._id,
-        orderNumber: order.orderNumber,
-        customer: {
-          name: order.userId?.name || 'Unknown',
-          email: order.userId?.email || 'Unknown'
-        },
-        status: order.orderStatus,
-        paymentStatus: order.paymentStatus,
-        total: order.total,
-        items: order.items.map((item: IOrderItem) => ({
-          albumTitle: item.albumTitle,
-          quantity: item.quantity,
-          printSize: item.printSize
-        })),
-        shippingInfo: order.shippingInfo,
-        createdAt: order.createdAt,
-        trackingNumber: order.trackingNumber,
-        estimatedDelivery: order.estimatedDelivery
-      })),
+      orders: orders.map(order => {
+        const populatedOrder = order as unknown as PopulatedOrder;
+        return {
+          id: populatedOrder._id,
+          orderNumber: populatedOrder.orderNumber,
+          customer: {
+            name: populatedOrder.userId?.name || 'Unknown',
+            email: populatedOrder.userId?.email || 'Unknown'
+          },
+          status: populatedOrder.status,
+          paymentStatus: populatedOrder.paymentStatus,
+          total: populatedOrder.total,
+          items: populatedOrder.items.map((item: IOrderItem) => ({
+            albumTitle: item.albumTitle,
+            quantity: item.quantity,
+            printSize: item.printSize
+          })),
+          shippingInfo: populatedOrder.shippingInfo,
+          createdAt: populatedOrder.createdAt,
+          trackingNumber: populatedOrder.trackingNumber,
+          estimatedDelivery: populatedOrder.estimatedDelivery
+        };
+      }),
       pagination: {
         page,
         limit,
@@ -97,7 +108,7 @@ export async function PUT(request: NextRequest) {
       if (!validStatuses.includes(newStatus)) {
         return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
       }
-      order.orderStatus = newStatus;
+      order.status = newStatus;
     }
 
     if (action === 'update-tracking') {
@@ -106,7 +117,7 @@ export async function PUT(request: NextRequest) {
     }
 
     if (action === 'update-payment-status') {
-      const validPaymentStatuses = ['pending', 'paid', 'failed', 'refunded'];
+      const validPaymentStatuses = ['pending', 'paid', 'failed', 'refunded', 'bypassed'];
       if (!validPaymentStatuses.includes(newStatus)) {
         return NextResponse.json({ error: 'Invalid payment status' }, { status: 400 });
       }
@@ -120,7 +131,7 @@ export async function PUT(request: NextRequest) {
       success: true,
       order: {
         id: order._id,
-        status: order.orderStatus,
+        status: order.status,
         paymentStatus: order.paymentStatus,
         trackingNumber: order.trackingNumber,
         estimatedDelivery: order.estimatedDelivery

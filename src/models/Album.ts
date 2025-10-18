@@ -27,6 +27,9 @@ export interface IAlbum extends Document {
   publishedAt?: Date;
   viewCount: number;
   likeCount: number;
+  status: 'draft' | 'published' | 'ordered' | 'archived'; // Add status field
+  orderedAt?: Date; // When the album was ordered
+  orderId?: mongoose.Types.ObjectId; // Reference to the order
   createdAt: Date;
   updatedAt: Date;
 }
@@ -118,6 +121,18 @@ const AlbumSchema = new Schema<IAlbum>({
   likeCount: {
     type: Number,
     default: 0
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'published', 'ordered', 'archived'],
+    default: 'draft'
+  },
+  orderedAt: {
+    type: Date,
+  },
+  orderId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Order'
   }
 }, {
   timestamps: true,

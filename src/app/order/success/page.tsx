@@ -39,6 +39,8 @@ const getPaymentStatusColor = (status: string) => {
       return 'bg-green-100 text-green-800';
     case 'pending':
       return 'bg-yellow-100 text-yellow-800';
+    case 'bypassed':
+      return 'bg-blue-100 text-blue-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
@@ -50,6 +52,8 @@ const getPaymentStatusText = (status: string) => {
       return 'Payment has been processed successfully';
     case 'pending':
       return 'Payment is being processed';
+    case 'bypassed':
+      return 'Payment processing bypassed for development/testing';
     default:
       return 'Payment status unknown';
   }

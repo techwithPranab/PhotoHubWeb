@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
 import Order from '@/models/Order';
 
@@ -31,14 +31,17 @@ export async function GET(
       order: {
         id: order._id,
         orderNumber: order.orderNumber,
-        status: order.orderStatus,
+        status: order.status,
         paymentStatus: order.paymentStatus,
         items: order.items,
         shippingInfo: order.shippingInfo,
-        subtotal: order.subtotal,
-        shipping: order.shipping,
-        tax: order.tax,
-        total: order.total,
+        pricing: {
+          subtotal: order.subtotal,
+          tax: order.tax,
+          shipping: order.shipping,
+          total: order.total
+        },
+        specialInstructions: order.notes || '',
         trackingNumber: order.trackingNumber,
         estimatedDelivery: order.estimatedDelivery,
         createdAt: order.createdAt,
@@ -79,8 +82,8 @@ export async function PUT(
     }
 
     // Only allow certain status updates for regular users
-    if (action === 'cancel' && order.orderStatus === 'pending') {
-      order.orderStatus = 'cancelled';
+    if (action === 'cancel' && order.status === 'pending') {
+      order.status = 'cancelled';
       order.updatedAt = new Date();
       await order.save();
     } else if (action === 'update-tracking' && session.user.role === 'admin') {
@@ -96,7 +99,7 @@ export async function PUT(
       success: true,
       order: {
         id: order._id,
-        status: order.orderStatus,
+        status: order.status,
         trackingNumber: order.trackingNumber,
         estimatedDelivery: order.estimatedDelivery
       }

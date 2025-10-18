@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
 import Order, { IOrderItem } from '@/models/Order';
 import Album from '@/models/Album';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-09-30.clover',
+});
+
+// Generate unique order number
+function generateOrderNumber(): string {
+  const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0'); // 3-digit random number
+  return `PH-${timestamp}-${random}`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,9 +54,11 @@ export async function POST(request: NextRequest) {
     const shipping = calculateShipping(shippingInfo.country);
     const total = subtotal + tax + shipping;
 
-    // Create order
+    // Create order (bypassing Stripe for now)
+    const orderNumber = generateOrderNumber();
     const order = new Order({
       userId: session.user.id,
+      orderNumber,
       items: [{
         albumId,
         albumTitle: album.title,
@@ -60,67 +74,29 @@ export async function POST(request: NextRequest) {
       shipping,
       tax,
       total,
-      specialInstructions,
-      orderStatus: 'pending',
-      paymentStatus: 'pending'
+      notes: specialInstructions,
+      status: 'pending',
+      paymentStatus: 'bypassed' // Bypassed Stripe integration
     });
 
     await order.save();
 
-    // Create Stripe Payment Intent
-    try {
-      const paymentResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/stripe/create-payment-intent`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: total,
-          orderId: order._id,
-          metadata: {
-            orderNumber: order.orderNumber,
-            customerEmail: shippingInfo.email,
-            albumTitle: album.title
-          }
-        })
-      });
+    // Update album status to ordered
+    album.status = 'ordered';
+    album.orderedAt = new Date();
+    album.orderId = order._id;
+    await album.save();
 
-      if (!paymentResponse.ok) {
-        throw new Error('Failed to create payment intent');
-      }
-
-      const { clientSecret, paymentIntentId } = await paymentResponse.json();
-
-      // Update order with payment intent ID
-      order.stripePaymentIntentId = paymentIntentId;
-      await order.save();
-
-      return NextResponse.json({
-        success: true,
-        order: {
-          id: order._id,
-          orderNumber: order.orderNumber,
-          total: order.total,
-          status: order.orderStatus
-        },
-        clientSecret
-      });
-
-    } catch (paymentError) {
-      console.error('Payment intent creation failed:', paymentError);
-      
-      // Return order without payment intent - can be paid later
-      return NextResponse.json({
-        success: true,
-        order: {
-          id: order._id,
-          orderNumber: order.orderNumber,
-          total: order.total,
-          status: order.orderStatus
-        },
-        paymentError: 'Payment system temporarily unavailable. Order created successfully.'
-      });
-    }
+    return NextResponse.json({
+      success: true,
+      order: {
+        id: order._id,
+        orderNumber: order.orderNumber,
+        total: order.total,
+        status: order.status
+      },
+      message: 'Order created successfully. Payment processing bypassed.'
+    });
 
   } catch (error) {
     console.error('Order creation error:', error);
@@ -144,7 +120,7 @@ export async function GET(request: NextRequest) {
 
     const query: Record<string, unknown> = { userId: session.user.id };
     if (status) {
-      query.orderStatus = status;
+      query.status = status;
     }
 
     const orders = await Order.find(query)
@@ -159,7 +135,7 @@ export async function GET(request: NextRequest) {
       orders: orders.map(order => ({
         id: order._id,
         orderNumber: order.orderNumber,
-        status: order.orderStatus,
+        status: order.status,
         paymentStatus: order.paymentStatus,
         total: order.total,
         createdAt: order.createdAt,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
 import Album from '@/models/Album';
 import Photo from '@/models/Photo';
@@ -98,6 +98,7 @@ export async function GET(
       layout: album.layout,
       theme: album.theme,
       photoCount: album.photoCount,
+      pageCount: album.photoCount, // For ordering purposes
       totalSize: album.totalSize,
       viewCount: album.viewCount,
       likeCount: album.likeCount,

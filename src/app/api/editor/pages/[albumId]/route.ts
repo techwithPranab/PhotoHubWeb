@@ -4,7 +4,7 @@ import connectDB from '@/lib/mongodb';
 import AlbumPage from '@/models/AlbumPage';
 import EditorProject from '@/models/EditorProject';
 import Album from '@/models/Album';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 // GET /api/editor/pages/[albumId] - Get all pages for an album
 export async function GET(

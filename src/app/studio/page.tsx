@@ -29,6 +29,8 @@ export default function StudioPage() {
   const [projects, setProjects] = useState<EditorProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [deletingAlbum, setDeletingAlbum] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -40,6 +42,17 @@ export default function StudioPage() {
       fetchProjects();
     }
   }, [status, router]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showDeleteConfirm && !(event.target as Element).closest('.relative')) {
+        setShowDeleteConfirm(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showDeleteConfirm]);
 
   const fetchProjects = async () => {
     try {
@@ -83,6 +96,29 @@ export default function StudioPage() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create project');
+    }
+  };
+
+  const deleteAlbum = async (albumId: string) => {
+    try {
+      setDeletingAlbum(albumId);
+      const response = await fetch(`/api/albums/${albumId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete album');
+      }
+
+      // Remove the project from the list
+      setProjects(prev => prev.filter(project => 
+        (typeof project.albumId === 'string' ? project.albumId : project.albumId?._id) !== albumId
+      ));
+      setShowDeleteConfirm(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete album');
+    } finally {
+      setDeletingAlbum(null);
     }
   };
 
@@ -209,12 +245,23 @@ export default function StudioPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-              {projects.map((project) => (
+              {projects.map((project) => {
+                let statusClasses = 'bg-gray-100 text-gray-800';
+                if (project.status === 'published') {
+                  statusClasses = 'bg-green-100 text-green-800';
+                } else if (project.status === 'draft') {
+                  statusClasses = 'bg-yellow-100 text-yellow-800';
+                }
+                
+                const albumId = typeof project.albumId === 'string' ? project.albumId : project.albumId?._id || '';
+                const isDeleting = deletingAlbum === albumId;
+
+                return (
                 <div key={project._id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                   <div className="aspect-video bg-gray-100 relative">
-                    {project.thumbnail || project.albumId.thumbnail ? (
+                    {project.thumbnail || project.albumId?.thumbnail ? (
                       <Image
-                        src={project.thumbnail || project.albumId.thumbnail || ''}
+                        src={project.thumbnail || project.albumId?.thumbnail || ''}
                         alt={project.projectName}
                         fill
                         className="object-cover"
@@ -227,11 +274,7 @@ export default function StudioPage() {
                       </div>
                     )}
                     <div className="absolute top-2 right-2">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        project.status === 'published' ? 'bg-green-100 text-green-800' :
-                        project.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusClasses}`}>
                         {project.status}
                       </span>
                     </div>
@@ -246,20 +289,61 @@ export default function StudioPage() {
                     
                     <div className="flex gap-2">
                       <Link
-                        href={`/editor/${typeof project.albumId === 'string' ? project.albumId : project.albumId._id}`}
+                        href={`/editor/${albumId}`}
                         className="flex-1 bg-purple-600 text-white text-center py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors text-sm"
                       >
                         Edit in Studio
                       </Link>
-                      <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                        </svg>
-                      </button>
+                      <Link
+                        href={`/order?albumId=${albumId}`}
+                        className="bg-gradient-to-r from-green-600 to-green-700 text-white text-center py-2 px-4 rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 text-sm font-medium shadow-md"
+                      >
+                        Order Now
+                      </Link>
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowDeleteConfirm(showDeleteConfirm === project._id ? null : project._id)}
+                          className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                          </svg>
+                        </button>
+                        
+                        {showDeleteConfirm === project._id && (
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                            <div className="py-1">
+                              <button
+                                onClick={() => deleteAlbum(albumId)}
+                                disabled={isDeleting}
+                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isDeleting ? (
+                                  <>
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Deleting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Delete Album
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

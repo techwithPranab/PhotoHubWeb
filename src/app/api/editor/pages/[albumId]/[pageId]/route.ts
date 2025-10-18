@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import connectDB from '@/lib/mongodb';
 import AlbumPage from '@/models/AlbumPage';
 import Album from '@/models/Album';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 // GET /api/editor/pages/[albumId]/[pageId] - Get specific page
 export async function GET(

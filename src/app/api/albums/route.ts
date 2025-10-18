@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
 import Album from '@/models/Album';
 import type { AlbumPrivacy, AlbumLayout } from '@/types';
@@ -77,6 +77,8 @@ export async function GET(request: NextRequest) {
       likeCount: album.likeCount,
       isPublished: album.isPublished,
       publishedAt: album.publishedAt,
+      status: album.status,
+      orderedAt: album.orderedAt,
       createdAt: album.createdAt,
       updatedAt: album.updatedAt
     }));

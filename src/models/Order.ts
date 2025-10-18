@@ -3,8 +3,8 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IOrderItem {
   albumId: mongoose.Types.ObjectId;
   albumTitle: string;
-  printSize: 'small' | 'medium' | 'large' | 'xl';
-  paperType: 'matte' | 'glossy' | 'premium';
+  printSize: '8x10' | '11x14' | '16x20' | '24x30';
+  paperType: 'standard' | 'premium' | 'museum';
   coverType: 'softcover' | 'hardcover';
   quantity: number;
   unitPrice: number;
@@ -12,8 +12,8 @@ export interface IOrderItem {
 }
 
 export interface IShippingInfo {
-  firstName: string;
-  lastName: string;
+  name: string;
+  email: string;
   address: string;
   city: string;
   state: string;
@@ -33,7 +33,7 @@ export interface IOrder extends Document {
   total: number;
   currency: string;
   status: 'pending' | 'processing' | 'printing' | 'shipped' | 'delivered' | 'cancelled';
-  paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
+  paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded' | 'bypassed';
   stripePaymentIntentId?: string;
   shippingInfo: IShippingInfo;
   trackingNumber?: string;
@@ -55,12 +55,12 @@ const OrderItemSchema = new Schema<IOrderItem>({
   },
   printSize: {
     type: String,
-    enum: ['small', 'medium', 'large', 'xl'],
+    enum: ['8x10', '11x14', '16x20', '24x30'],
     required: true
   },
   paperType: {
     type: String,
-    enum: ['matte', 'glossy', 'premium'],
+    enum: ['standard', 'premium', 'museum'],
     required: true
   },
   coverType: {
@@ -86,8 +86,8 @@ const OrderItemSchema = new Schema<IOrderItem>({
 });
 
 const ShippingInfoSchema = new Schema<IShippingInfo>({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
+  name: { type: String, required: true },
+  email: { type: String, required: true },
   address: { type: String, required: true },
   city: { type: String, required: true },
   state: { type: String, required: true },
@@ -139,7 +139,7 @@ const OrderSchema = new Schema<IOrder>({
   },
   paymentStatus: {
     type: String,
-    enum: ['pending', 'completed', 'failed', 'refunded'],
+    enum: ['pending', 'completed', 'failed', 'refunded', 'bypassed'],
     default: 'pending'
   },
   stripePaymentIntentId: {
@@ -165,8 +165,10 @@ const OrderSchema = new Schema<IOrder>({
 
 // Indexes for faster queries
 OrderSchema.index({ userId: 1, createdAt: -1 });
-OrderSchema.index({ orderNumber: 1 });
 OrderSchema.index({ status: 1 });
 OrderSchema.index({ paymentStatus: 1 });
 
-export default mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);
+// Force model recompilation
+delete mongoose.models.Order;
+
+export default mongoose.model<IOrder>('Order', OrderSchema);

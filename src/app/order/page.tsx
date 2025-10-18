@@ -3,14 +3,15 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import StripeProvider from '@/components/StripeProvider';
 import PaymentForm from '@/components/PaymentForm';
 
 interface Album {
-  _id: string;
+  id: string;
   title: string;
   description: string;
-  coverImage: string;
+  coverPhoto: string;
   pageCount: number;
 }
 
@@ -36,6 +37,7 @@ const getPagePrice = (pageCount: number): number => {
 function OrderContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
   const albumId = searchParams.get('albumId');
 
   const [album, setAlbum] = useState<Album | null>(null);
@@ -74,10 +76,21 @@ function OrderContent() {
   });
 
   useEffect(() => {
-    if (albumId) {
-      fetchAlbum();
+    if (status === 'loading') return;
+
+    if (status === 'unauthenticated') {
+      router.push('/login?callbackUrl=' + encodeURIComponent(globalThis.location.pathname + globalThis.location.search));
+      return;
     }
-  }, [albumId]);
+
+    if (albumId && status === 'authenticated') {
+      console.log('Album ID from URL:', albumId);
+      fetchAlbum();
+    } else if (!albumId) {
+      console.log('No albumId in URL');
+      setLoading(false);
+    }
+  }, [albumId, status, router]);
 
   useEffect(() => {
     calculatePricing();
@@ -85,11 +98,33 @@ function OrderContent() {
 
   const fetchAlbum = async () => {
     try {
+      console.log('Fetching album with ID:', albumId);
+
+      if (!albumId || albumId === 'undefined' || albumId.trim() === '') {
+        console.log('Invalid album ID');
+        alert('Invalid album ID');
+        router.push('/albums');
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(`/api/albums/${albumId}`);
+      console.log('API Response status:', response.status);
+      console.log('API Response ok:', response.ok);
+
       if (response.ok) {
         const data = await response.json();
-        setAlbum(data.album);
+        console.log('API Response data:', data);
+        if (data.album) {
+          setAlbum(data.album);
+        } else {
+          console.log('No album data in response');
+          alert('Album not found');
+          router.push('/albums');
+        }
       } else {
+        const errorText = await response.text();
+        console.log('API Error response:', errorText);
         alert('Album not found');
         router.push('/albums');
       }
@@ -132,7 +167,7 @@ function OrderContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          albumId: album._id,
+          albumId: album.id,
           printSize,
           paperType,
           coverType,
@@ -145,8 +180,15 @@ function OrderContent() {
       if (response.ok) {
         const data = await response.json();
         setOrderId(data.order.id);
-        setPaymentIntentClientSecret(data.clientSecret);
-        setCurrentStep('payment');
+        
+        // Check if payment is bypassed or if we have a client secret for Stripe
+        if (data.clientSecret) {
+          setPaymentIntentClientSecret(data.clientSecret);
+          setCurrentStep('payment');
+        } else {
+          // Payment bypassed - go directly to success page
+          router.push(`/order/success?orderId=${data.order.id}`);
+        }
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to create order');
@@ -207,9 +249,9 @@ function OrderContent() {
             <div className="bg-white rounded-lg shadow p-6 sticky top-8">
               <h2 className="text-xl font-semibold mb-4">Album Preview</h2>
               <div className="aspect-square bg-gray-200 rounded-lg mb-4 overflow-hidden">
-                {album.coverImage && (
+                {album.coverPhoto && (
                   <img
-                    src={album.coverImage}
+                    src={album.coverPhoto}
                     alt={album.title}
                     className="w-full h-full object-cover"
                   />
@@ -488,7 +530,7 @@ function OrderContent() {
                   disabled={submitting}
                   className="w-full mt-6 bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {submitting ? 'Creating Order...' : `Continue to Payment - $${pricing.total.toFixed(2)}`}
+                  {submitting ? 'Creating Order...' : `Place Order - $${pricing.total.toFixed(2)}`}
                 </button>
               </div>
             </form>

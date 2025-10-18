@@ -65,6 +65,9 @@ export default function Navigation() {
               <Link href="/pricing" className="text-gray-700 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors duration-200">
                 Pricing
               </Link>
+              <Link href="/order-flow" className="text-gray-700 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors duration-200">
+                How to Order
+              </Link>
             </div>
           </div>
 
@@ -94,6 +97,9 @@ export default function Navigation() {
                       </Link>
                       <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600">
                         Profile
+                      </Link>
+                      <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600">
+                        Settings
                       </Link>
                       <hr className="my-2" />
                       <button
@@ -158,6 +164,9 @@ export default function Navigation() {
             <Link href="/pricing" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
               Pricing
             </Link>
+            <Link href="/order-flow" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
+              How to Order
+            </Link>
             
             <hr className="my-4" />
             
@@ -168,6 +177,12 @@ export default function Navigation() {
                 </Link>
                 <Link href="/orders" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
                   My Orders
+                </Link>
+                <Link href="/profile" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
+                  Profile
+                </Link>
+                <Link href="/settings" className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-md">
+                  Settings
                 </Link>
                 <button
                   onClick={() => signOut()}
